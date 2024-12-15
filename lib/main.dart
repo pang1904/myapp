@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'index.dart';
+import 'index.dart';  // หน้า IndexPage
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginPage(),
+      home: const LoginPage(), // หน้าจอเริ่มต้น
     );
   }
 }
@@ -51,56 +51,69 @@ class _LoginPageState extends State<LoginPage> {
         headers: {'Content-Type': 'application/json'},
       );
 
-      // ตรวจสอบสถานะ HTTP ก่อน
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         print('Response Data: $responseData');
 
-        // ตรวจสอบว่า 'result' มีค่าเป็น true หรือ false
-        if (responseData['result'] == true) {
-          // เมื่อกรอกข้อมูลถูกต้อง
+        if (responseData['result'] == true || responseData['result'] == 'true') {
+          // Login Success
           _showSuccessPopup(responseData);
         } else {
-          // เมื่อกรอกข้อมูลผิด
-          _showErrorPopup(responseData['status_message']);
+          // Login Failed
+          _showErrorPopup(responseData);
         }
       } else {
-        // ถ้าสถานะไม่ใช่ 200, แสดงข้อความผิดพลาด
-        _showErrorPopup('Server Error\nResponse: ${response.body}');
+        // Server Error
+        _showErrorPopup({
+          'result': false,
+          'status_code': response.statusCode,
+          'status_message': 'Server Error',
+        });
       }
     } catch (e) {
       print('ข้อผิดพลาด: $e');
-      _showErrorPopup('ไม่สามารถเชื่อมต่อกับ API ได้');
+      _showErrorPopup({
+        'result': false,
+        'status_code': 500,
+        'status_message': 'ไม่สามารถเชื่อมต่อกับ API ได้',
+      });
     }
   }
 
   // ฟังก์ชันแสดง Popup สำหรับการล็อกอินสำเร็จ
   void _showSuccessPopup(Map<String, dynamic> responseData) {
+    final userInfo = responseData['userinfo'];
+    // เปลี่ยนจากการแสดง Popup ไปยังหน้า index.dart
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (ctx) => IndexPage(responseData: responseData), // ส่งข้อมูลไปที่หน้า IndexPage
+      ),
+    );
+  }
+
+ void _showErrorPopup(Map<String, dynamic> responseData) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('ผลลัพธ์การ LOGIN'),
-      content: Text(
-        'Login สำเร็จ'
+      contentPadding: const EdgeInsets.all(16.0), // ลด padding ของ dialog
+      content: Container(
+        constraints: const BoxConstraints(maxWidth: 300), // กำหนดขนาดสูงสุด
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // ทำให้ขนาด column พอดีกับเนื้อหา
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Result: ${responseData['result']}'),
+            Text('Status Code: ${responseData['status_code']}'),
+            Text('Status Message: ${responseData['status_message']}'),
+          ],
         ),
+      ),
       actions: <Widget>[
         TextButton(
           onPressed: () {
-            Navigator.of(ctx).pop(); // ปิด Popup
-            // ไปที่หน้า IndexPage พร้อมข้อมูล userInfo
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => IndexPage(
-                  userInfo: {
-                    'fullname': '${responseData['userinfo']['firstname']} ${responseData['userinfo']['lastname']}',
-                    'mobile': responseData['userinfo']['mobile'],
-                    'User ID: ${responseData['userinfo']['us_id']}'
-                    'email': responseData['userinfo']['email'],
-                  },
-                ),
-              ),
-            );
+            Navigator.of(ctx).pop();
           },
           child: const Text('OK'),
         ),
@@ -108,24 +121,7 @@ class _LoginPageState extends State<LoginPage> {
     ),
   );
 }
-  // ฟังก์ชันแสดง Popup สำหรับกรณีข้อมูลผิด
-  void _showErrorPopup(String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('ผลลัพธ์การ LOGIN'),
-        content: Text(message),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
         title: const Text('Login'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(26.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -165,3 +161,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
