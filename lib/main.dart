@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'index.dart'; 
+import 'index.dart';
 
 void main() {
   runApp(const MyApp());
@@ -45,39 +45,75 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      print('กำลังส่งคำขอ: username=$username, password=$password');
       final response = await http.post(
-        Uri.parse('https://srp-m2-ci4-trial.stgdevlab.com/ajx_login_srpos'), 
+        Uri.parse('https://srp-m2-ci4-trial.stgdevlab.com/ajx_login_srpos'),
         body: jsonEncode({'username': username, 'password': password}),
         headers: {'Content-Type': 'application/json'},
       );
 
-      print('สถานะการตอบกลับ: ${response.statusCode}');
-      print('ข้อมูลที่ได้รับ: ${response.body}');
+      // ตรวจสอบสถานะ HTTP ก่อน
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        print('Response Data: $responseData');
 
-      final responseData = jsonDecode(response.body);
-
-      if (response.statusCode == 200 && responseData['success'] == true) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const IndexPage()), 
-        );
-      } else if (response.statusCode == 400 || response.statusCode == 401) {
-        _showErrorDialog(responseData['message'] ?? 'Username หรือ Password ไม่ถูกต้อง');
+        // ตรวจสอบว่า 'result' มีค่าเป็น true หรือ false
+        if (responseData['result'] == true) {
+          // เมื่อกรอกข้อมูลถูกต้อง
+          _showSuccessPopup(responseData);
+        } else {
+          // เมื่อกรอกข้อมูลผิด
+          _showErrorPopup(responseData['status_message']);
+        }
       } else {
-        _showErrorDialog('ข้อผิดพลาด: ${response.statusCode} - ${responseData['message'] ?? 'ไม่สามารถเชื่อมต่อกับ API ได้'}');
+        // ถ้าสถานะไม่ใช่ 200, แสดงข้อความผิดพลาด
+        _showErrorPopup('Server Error\nResponse: ${response.body}');
       }
     } catch (e) {
-      print('ข้อผิดพลาดที่เกิดขึ้น: $e');
-      _showErrorDialog('ข้อผิดพลาด: ไม่สามารถเชื่อมต่อกับ API ได้');
+      print('ข้อผิดพลาด: $e');
+      _showErrorPopup('ไม่สามารถเชื่อมต่อกับ API ได้');
     }
   }
 
-  void _showErrorDialog(String message) {
+  // ฟังก์ชันแสดง Popup สำหรับการล็อกอินสำเร็จ
+  void _showSuccessPopup(Map<String, dynamic> responseData) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('ผลลัพธ์การ LOGIN'),
+      content: Text(
+        'Login สำเร็จ'
+        ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(ctx).pop(); // ปิด Popup
+            // ไปที่หน้า IndexPage พร้อมข้อมูล userInfo
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => IndexPage(
+                  userInfo: {
+                    'fullname': '${responseData['userinfo']['firstname']} ${responseData['userinfo']['lastname']}',
+                    'mobile': responseData['userinfo']['mobile'],
+                    'User ID: ${responseData['userinfo']['us_id']}'
+                    'email': responseData['userinfo']['email'],
+                  },
+                ),
+              ),
+            );
+          },
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
+}
+  // ฟังก์ชันแสดง Popup สำหรับกรณีข้อมูลผิด
+  void _showErrorPopup(String message) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Error'),
+        title: const Text('ผลลัพธ์การ LOGIN'),
         content: Text(message),
         actions: <Widget>[
           TextButton(
