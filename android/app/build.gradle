@@ -1,0 +1,28 @@
+android {
+    namespace = "com.example.testappflutter" // ชื่อแพ็กเกจที่ต้องการใช้
+    compileSdkVersion 33  // กำหนดค่า compileSdkVersion ที่คุณต้องการ (หรือเวอร์ชันล่าสุดที่รองรับ)
+    ndkVersion = "25.1.0"  // ใช้ NDK เวอร์ชันที่เหมาะสม (ถ้ามีการใช้งาน)
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    defaultConfig {
+        applicationId = "com.example.testappflutter"  // ตั้งค่าชื่อแพ็กเกจของแอป
+        minSdkVersion 21  // กำหนดค่า minSdkVersion ให้รองรับอุปกรณ์ Android 5.0 (Lollipop) ขึ้นไป
+        targetSdkVersion 33  // กำหนดค่า targetSdkVersion ให้รองรับ Android 13 (หรือเวอร์ชันที่รองรับ)
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.debug  // ใช้การเซ็นต์โค้ดแบบ debug สำหรับการทดสอบ
+        }
+    }
+}
