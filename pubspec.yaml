@@ -1,23 +1,22 @@
 name: myapp
-description: "A new Flutter project."
+description: A new Flutter project
 
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
-version: 1.0.0+1
+publish_to: 'none' # Remove this line if you are publishing to pub.dev
 
 environment:
-  sdk: ^3.5.4
+  sdk: "^3.6.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  http: ^0.13.3  # เพิ่มเข้าไป
-  cupertino_icons: ^1.0.8
+  http: ^1.2.2
+  location: ^4.4.0
+  connectivity_plus: ^2.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
